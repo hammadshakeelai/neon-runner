@@ -384,20 +384,45 @@ void main() {
       !blocked(x, z + 3) && !blocked(x, z - 3);
   }
 
+  function runIn(x, z, dx, dz) {
+    const STEP = 2;
+    let d = 0;
+    while (d < 240 && !blocked(x + dx * d, z + dz * d)) d += STEP;
+    return d;
+  }
+
   function findSpawn() {
-    for (let r = 0; r < 70; r++) {
-      const radius = r * 4;
-      const steps = r === 0 ? 1 : 20;
+    let best = null;
+    let bestScore = -1;
+    for (let r = 0; r < 100; r++) {
+      const radius = r * 2.5;
+      const steps = r === 0 ? 1 : 48;
       for (let s = 0; s < steps; s++) {
         const t = (s / steps) * Math.PI * 2;
         const x = Math.cos(t) * radius;
         const z = Math.sin(t) * radius;
-        if (clearAround(x, z)) {
-          return { x: x, z: z, a: Math.atan2(-x, -z) };
+        if (!clearAround(x, z)) continue;
+
+        const px = runIn(x, z, 1, 0);
+        const mx = runIn(x, z, -1, 0);
+        const pz = runIn(x, z, 0, 1);
+        const mz = runIn(x, z, 0, -1);
+        const rx = px + mx;
+        const rz = pz + mz;
+        if (Math.min(rx, rz) < 8) continue;
+
+        const score = rx + rz;
+        if (score > bestScore) {
+          bestScore = score;
+          const a = rx >= rz
+            ? (px >= mx ? Math.PI / 2 : -Math.PI / 2)
+            : (pz >= mz ? 0 : Math.PI);
+          best = { x: x, z: z, a: a };
         }
       }
+      if (bestScore >= 140) break;
     }
-    return { x: 0, z: 0, a: Math.PI };
+    return best || { x: 0, z: 0, a: 0 };
   }
 
   const spawn = findSpawn();
@@ -444,8 +469,10 @@ void main() {
     const nx = car.x + fx * car.speed * dt;
     const nz = car.z + fz * car.speed * dt;
 
-    if (!blocked(nx, car.z)) car.x = nx; else car.speed *= 0.3;
-    if (!blocked(car.x, nz)) car.z = nz; else car.speed *= 0.3;
+    let hit = false;
+    if (!blocked(nx, car.z)) car.x = nx; else hit = true;
+    if (!blocked(car.x, nz)) car.z = nz; else hit = true;
+    if (hit) car.speed *= 0.5;
   }
 
   /* ------------------------------------------------------------------ */
