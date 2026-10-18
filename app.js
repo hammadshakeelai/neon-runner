@@ -147,6 +147,26 @@ void main() {
   frag = vec4(col, 1.0);
 }`;
 
+  const CAR_FS = `#version 300 es
+precision highp float;
+in vec3 vNormal;
+in vec2 vUV;
+in vec3 vColor;
+in vec3 vWorld;
+uniform vec3 uCam;
+uniform vec3 uFog;
+out vec4 frag;
+void main() {
+  vec3 n = normalize(vNormal);
+  float diff = max(dot(n, normalize(vec3(0.45, 0.85, 0.3))), 0.0);
+  float rim = pow(1.0 - max(dot(n, normalize(uCam - vWorld)), 0.0), 2.0);
+  vec3 col = vColor * (0.3 + diff * 0.8);
+  col += vec3(0.10, 0.85, 1.0) * rim * 0.55;
+  float dist = length(vWorld - uCam);
+  col = mix(col, uFog, clamp(1.0 - exp(-dist * 0.011), 0.0, 1.0));
+  frag = vec4(col, 1.0);
+}`;
+
   const GROUND_VS = `#version 300 es
 layout(location = 0) in vec3 aPos;
 uniform mat4 uViewProj;
@@ -201,6 +221,7 @@ void main() {
   }
 
   const cityProgram = link(CITY_VS, CITY_FS, ["aPos", "aNormal", "aUV", "aColor"]);
+  const carProgram = link(CITY_VS, CAR_FS, ["aPos", "aNormal", "aUV", "aColor"]);
   const groundProgram = link(GROUND_VS, GROUND_FS, ["aPos"]);
 
   const cityU = {
@@ -208,6 +229,12 @@ void main() {
     model: gl.getUniformLocation(cityProgram, "uModel"),
     cam: gl.getUniformLocation(cityProgram, "uCam"),
     fog: gl.getUniformLocation(cityProgram, "uFog"),
+  };
+  const carU = {
+    viewProj: gl.getUniformLocation(carProgram, "uViewProj"),
+    model: gl.getUniformLocation(carProgram, "uModel"),
+    cam: gl.getUniformLocation(carProgram, "uCam"),
+    fog: gl.getUniformLocation(carProgram, "uFog"),
   };
   const groundU = {
     viewProj: gl.getUniformLocation(groundProgram, "uViewProj"),
@@ -302,7 +329,24 @@ void main() {
   ]);
 
   const carVertices = [];
-  pushBox(carVertices, 0, 0, 0, 1.0, 0.5, 1.6, [0.9, 0.95, 1.0]);
+  const BODY = [0.16, 0.18, 0.26];
+  const GLASS = [0.42, 0.50, 0.62];
+  const NEON = [0.10, 0.90, 1.00];
+  const LAMP = [1.00, 0.95, 0.80];
+  const TAIL = [1.00, 0.15, 0.45];
+  const TYRE = [0.04, 0.04, 0.06];
+
+  pushBox(carVertices, 0, 0, 0, 0.82, 0.28, 1.62, BODY);
+  pushBox(carVertices, 0, 0.62, -0.15, 0.60, 0.30, 0.72, GLASS);
+  pushBox(carVertices, 0, -0.30, 0, 0.86, 0.06, 1.66, NEON);
+  pushBox(carVertices, 0, 0.05, 1.64, 0.60, 0.09, 0.06, LAMP);
+  pushBox(carVertices, 0, 0.05, -1.64, 0.60, 0.09, 0.06, TAIL);
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      pushBox(carVertices, sx * 0.86, -0.20, sz * 1.05, 0.14, 0.30, 0.32, TYRE);
+    }
+  }
+  const carVertexCount = carVertices.length / 11;
 
   /* ------------------------------------------------------------------ */
   /* Buffers                                                            */
@@ -542,10 +586,14 @@ void main() {
     gl.bindVertexArray(cityVao);
     gl.drawArrays(gl.TRIANGLES, 0, cityVertexCount);
 
-    fromYRotation(model, car.a, car.x, 0.5, car.z);
-    gl.uniformMatrix4fv(cityU.model, false, model);
+    gl.useProgram(carProgram);
+    gl.uniformMatrix4fv(carU.viewProj, false, viewProj);
+    gl.uniform3fv(carU.cam, eye);
+    gl.uniform3fv(carU.fog, FOG);
+    fromYRotation(model, car.a, car.x, 0.55, car.z);
+    gl.uniformMatrix4fv(carU.model, false, model);
     gl.bindVertexArray(carVao);
-    gl.drawArrays(gl.TRIANGLES, 0, 36);
+    gl.drawArrays(gl.TRIANGLES, 0, carVertexCount);
 
     speedTimer += dt;
     if (speedTimer > 0.1) {
