@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Neon Runner — cyberpunk-styled WebGL demo</title>
+<meta name="description" content="An original, dependency-free WebGL2 cyberpunk city driving demo. Not affiliated with any commercial game." />
+<style>
+  :root { color-scheme: dark; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: #05030a; color: #eaf6ff;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+  #title { position: fixed; left: 14px; top: 12px; pointer-events: none; }
+  #title h1 {
+    margin: 0; font-size: 15px; letter-spacing: .22em;
+    color: #ff2ec4; text-shadow: 0 0 12px #ff2ec4;
+  }
+  #title p { margin: 3px 0 0; font-size: 11px; color: #8fa3c0; letter-spacing: .05em; }
+
+  #status { position: fixed; right: 14px; top: 12px; text-align: right; pointer-events: none; }
+  #status b { color: #22e0ff; font-size: 22px; text-shadow: 0 0 12px #22e0ff; }
+
+  #hud { position: fixed; left: 14px; bottom: 14px; pointer-events: none; text-shadow: 0 0 8px #000; }
+  #hud .k { color: #22e0ff; }
+
+  #fallback {
+    display: none; position: fixed; inset: 0; place-items: center;
+    background: #05030a; padding: 24px; text-align: center;
+  }
+  .badge {
+    display: inline-block; margin-top: 12px; padding: 3px 10px;
+    border: 1px solid #ff2ec4; border-radius: 999px;
+    color: #ff2ec4; font-size: 10px; letter-spacing: .14em;
+  }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="title">
+  <h1>NEON RUNNER</h1>
+  <p>An original cyberpunk-styled WebGL2 demo — not a port of any commercial game.</p>
+</div>
+
+<div id="status">
+  <b id="speed">0</b>
+  <div style="font-size:11px;color:#8fa3c0">km/h</div>
+</div>
+
+<div id="hud">
+  <div>
+    <span class="k">W / S</span> throttle &nbsp;·&nbsp;
+    <span class="k">A / D</span> steer &nbsp;·&nbsp;
+    <span class="k">Shift</span> boost &nbsp;·&nbsp;
+    <span class="k">R</span> reset
+  </div>
+</div>
+
+<div id="fallback">
+  <div>
+    <h1 style="color:#ff2ec4;letter-spacing:.2em;margin:0 0 8px">WEBGL2 UNAVAILABLE</h1>
+    <p style="max-width:440px;color:#9fb3cc">
+      This demo needs WebGL2 with hardware acceleration enabled.
+      Turn it on in your browser settings and reload.
+    </p>
+    <div class="badge">ORIGINAL DEMO</div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
